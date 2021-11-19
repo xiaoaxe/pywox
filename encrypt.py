@@ -9,11 +9,14 @@
 """
 import hmac
 import hashlib
+import os
 import sys
 from pyDes import des, CBC, PAD_PKCS5
 import binascii
 from Crypto.Cipher import AES
 import base64
+import rsa
+from rsa import common
 
 secret = b'a very secret hahaha'
 des_secret = b'66668888'
@@ -61,7 +64,65 @@ def symmetric_enc(s):
 
 
 def asymmetric_enc(s):
-    pass
+    rsa_util = RsaUtil()
+    rsa_encrypted = rsa_util.encrypt(s)
+    rsa_decrypted = rsa_util.decrypt(rsa_encrypted)
+    print(f'data {s} rsa encrypted is {rsa_encrypted}, len: {len(rsa_encrypted)}')  # 32
+    print(f'data {rsa_encrypted} rsa decrypted is {rsa_decrypted}')
+
+    sign = rsa_util.sign(s)
+    verify = rsa_util.verify(s, sign)
+    print(f'data {s} sign is {sign}, verify is {verify}')
+
+
+# rsa class
+class RsaUtil:
+    PUB_KEY_PATH = os.environ['HOME'] + '/dev/test/pub_8.pem'
+    PRI_KEY_PATH = os.environ['HOME'] + '/dev/test/private_1.pem'
+
+    def __init__(self):
+        self.pub_key = rsa.PublicKey.load_pkcs1_openssl_pem(open(self.PUB_KEY_PATH, 'rb').read())
+        self.pri_key = rsa.PrivateKey.load_pkcs1(open(self.PRI_KEY_PATH, 'rb').read())
+
+    def get_max_length(self, rsa_key, encrypt=True):
+        blocksize = common.byte_size(rsa_key.n)
+        reserve_size = 11
+        if not encrypt:
+            reserve_size = 0
+        max_len = blocksize - reserve_size
+        return max_len
+
+    def encrypt(self, msg):
+        result = b''
+        max_len = self.get_max_length(self.pub_key)
+        while msg:
+            batch = msg[:max_len]
+            output = rsa.encrypt(batch.encode(), self.pub_key)
+            result += output
+            # next one
+            msg = msg[max_len:]
+        return base64.b64encode(result)
+
+    def decrypt(self, msg):
+        result = b''
+        max_len = self.get_max_length(self.pri_key, False)
+        msg = base64.b64decode(msg)
+
+        while msg:
+            batch = msg[:max_len]
+            output = rsa.decrypt(batch, self.pri_key)
+            result += output
+            # next one
+            msg = msg[max_len:]
+        return result.decode()
+
+    def sign(self, data):
+        signature = rsa.sign(data.encode(), priv_key=self.pri_key, hash_method='SHA-1')
+        return base64.b64encode(signature)
+
+    def verify(self, data, signature):
+        signature = base64.b64decode(signature)
+        return rsa.verify(data.encode(), signature, self.pub_key)
 
 
 # helpers

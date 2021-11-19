@@ -9,18 +9,23 @@
 """
 
 import sys
-from base64 import b64encode
+from base64 import b64encode,b64decode
 
 
 def encode_data():
     """
     usage:
-        python3 base64_encode.py 你好
+        python3 base64_encode.py d/e 你好
     :return:
     """
-    data = sys.argv[1]
-    encoded = b64encode(data.encode('utf-8'))
-    print(f'base64 encoded: {data} => {encoded}')
+    type_ = sys.argv[1]
+    data = sys.argv[2]
+    if type_ == 'e':
+        encoded = b64encode(data.encode('utf-8'))
+        print(f'base64 : {data} => {encoded.decode()}')
+    elif type_ == 'd':
+        decoded = b64decode(data.encode('utf-8'))
+        print(f'base64 : {data} => {decoded.decode()}')
 
 
 if __name__ == '__main__':
