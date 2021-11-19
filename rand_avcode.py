@@ -27,8 +27,8 @@ def get_one():
     '''
     candidate = []
 
-    list = s1+ip+md+ab
-    for pre in list:
+    lst = s1+ip+md+ab
+    for pre in lst:
         for i in range(1, 1000):
             candidate.append(f'{pre}-{i:03d}')
 
@@ -37,8 +37,29 @@ def get_one():
             candidate.append(f'{pre}-{i:03d}')
 
     print(f'total len: {len(candidate)}')
-    lucky = random.sample(candidate, 5)
+    filtered = list(filter(not_in, set(candidate)))
+    print(f'after len: {len(filtered)}')
+
+    lucky = random.sample(filtered, 5)
     print('lucky:\n', '\n'.join(lucky), sep='')
+
+
+def not_in(n):
+    return n not in visited
+
+
+visited = [
+    'snis-082',
+    'iptd-816',
+    'soe-420',
+    'stars-361',
+    'stars-444',
+    'ipx-462',
+    'fsdss-227',
+    'miad-257',
+    'miad-511',
+    'abw-011',
+]
 
 
 if __name__ == '__main__':
